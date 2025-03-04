@@ -16,21 +16,15 @@ format: .clang-files .clang-format
 	xargs -r clang-format -i <$<
 
 docker-build:
-	docker build -t fisopfs:latest .
+	./dock build
 
 docker-run:
-	docker container run -it --rm --name=fisopfs \
-		-v $(shell pwd):/fisopfs \
-		--device /dev/fuse \
-		--cap-add SYS_ADMIN \
-		--security-opt apparmor:unconfined \
-		fisopfs:latest \
-		bash 
+	./dock run
 
-docker-attach:
-	docker exec -it fisopfs bash
+docker-exec:
+	./dock exec
 
 clean:
 	rm -rf $(EXEC) *.o core vgcore.* $(FS_NAME)
 
-.PHONY: all build clean format docker-build docker-run docker-attach
+.PHONY: all build clean format docker-build docker-run docker-exec
