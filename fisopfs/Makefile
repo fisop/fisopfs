@@ -8,20 +8,18 @@ LDLIBS := $(shell pkg-config fuse --cflags --libs)
 # Name for the filesystem!
 FS_NAME := fisopfs
 
-all: build
+all: $(FS_NAME)
 	
-build: $(FS_NAME)
-
 format: .clang-files .clang-format
 	xargs -r clang-format -i <$<
 
-docker-build:
+build:
 	./dock build
 
-docker-run:
+run:
 	./dock run
 
-docker-exec:
+exec:
 	./dock exec
 
 clean:
