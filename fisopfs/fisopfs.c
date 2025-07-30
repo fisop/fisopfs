@@ -3,6 +3,7 @@
 #include <fuse.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/file.h>
@@ -12,7 +13,9 @@
 
 #define DEFAULT_FILE_DISK "persistence_file.fisopfs"
 
-char *filedisk = DEFAULT_FILE_DISK;
+// absolute path for persistence file used in
+// `.init` and `.destroy` FUSE operations
+static char filedisk_path[2 * PATH_MAX];
 
 static int
 fisopfs_getattr(const char *path, struct stat *st)
@@ -24,6 +27,7 @@ fisopfs_getattr(const char *path, struct stat *st)
 		st->st_mode = __S_IFDIR | 0755;
 		st->st_nlink = 2;
 	} else if (strcmp(path, "/fisop") == 0) {
+		// TODO: remove hardcoded file
 		st->st_uid = 1818;
 		st->st_mode = __S_IFREG | 0644;
 		st->st_size = 2048;
@@ -44,11 +48,11 @@ fisopfs_readdir(const char *path,
 {
 	printf("[debug] fisopfs_readdir - path: %s\n", path);
 
-	// Los directorios '.' y '..'
+	// pseudo directories '.' y '..'
 	filler(buffer, ".", NULL, 0);
 	filler(buffer, "..", NULL, 0);
 
-	// Si nos preguntan por el directorio raiz, solo tenemos un archivo
+	// TODO: remove hardcoded file
 	if (strcmp(path, "/") == 0) {
 		filler(buffer, "fisop", NULL, 0);
 		return 0;
@@ -56,9 +60,6 @@ fisopfs_readdir(const char *path,
 
 	return -ENOENT;
 }
-
-#define MAX_CONTENIDO 100
-static char fisop_file_contenidos[MAX_CONTENIDO] = "hola fisopfs!\n";
 
 static int
 fisopfs_read(const char *path,
@@ -72,7 +73,10 @@ fisopfs_read(const char *path,
 	       offset,
 	       size);
 
-	// Solo tenemos un archivo hardcodeado!
+	// TODO: remove hardcoded file
+	static char fisop_file_contenidos[100] = "hola fisopfs!\n";
+
+	// TODO: remove hardcoded file
 	if (strcmp(path, "/fisop") != 0)
 		return -ENOENT;
 
@@ -95,13 +99,16 @@ static struct fuse_operations operations = {
 int
 main(int argc, char *argv[])
 {
+	char *filedisk_name = DEFAULT_FILE_DISK;
+
 	for (int i = 1; i < argc - 1; i++) {
 		if (strcmp(argv[i], "--filedisk") == 0) {
-			filedisk = argv[i + 1];
+			filedisk_name = argv[i + 1];
 
-			// We remove the argument so that fuse doesn't use our
+			// we remove the argument so that FUSE doesn't use our
 			// argument or name as folder.
-			// Equivalent to a pop.
+			//
+			// equivalent to a pop.
 			for (int j = i; j < argc - 1; j++) {
 				argv[j] = argv[j + 2];
 			}
@@ -110,6 +117,14 @@ main(int argc, char *argv[])
 			break;
 		}
 	}
+
+	// handle absolute path for persistence file
+	// so background executions can work properly
+	//
+	// Hint: use `getcwd(3)` before `fuse_main`
+	//
+	// TODO: build absolute path in `filedisk_path`
+	strcpy(filedisk_path, filedisk_name);
 
 	return fuse_main(argc, argv, &operations, NULL);
 }
