@@ -25,4 +25,4 @@ exec:
 clean:
 	rm -rf $(EXEC) *.o core vgcore.* $(FS_NAME)
 
-.PHONY: all build clean format docker-build docker-run docker-exec
+.PHONY: all build clean format build run exec
