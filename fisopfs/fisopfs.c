@@ -101,6 +101,7 @@ main(int argc, char *argv[])
 {
 	char *filedisk_name = DEFAULT_FILE_DISK;
 
+	// DO NOT modify the following code section
 	for (int i = 1; i < argc - 1; i++) {
 		if (strcmp(argv[i], "--filedisk") == 0) {
 			filedisk_name = argv[i + 1];
